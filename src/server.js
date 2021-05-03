@@ -11,6 +11,8 @@ const server = async () => {
     await mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
     });
     console.log('Mongodb Connected');
     app.use(express.json());
@@ -19,6 +21,54 @@ const server = async () => {
       try {
         const users = await User.find({});
         return res.send({ users });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).send({ err: err.message });
+      }
+    });
+
+    app.get('/user/:userId', async (req, res) => {
+      try {
+        const { userId } = req.params;
+        if (!mongoose.isValidObjectId)
+          return res.status(400).send({ err: 'invalide ID' });
+        const user = await User.findOne({ _id: userId });
+        return res.send({ user });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).send({ err: err.message });
+      }
+    });
+
+    app.delete('/user/:userId', async (req, res) => {
+      try {
+        const { userId } = req.params;
+        if (!mongoose.isValidObjectId)
+          return res.status(400).send({ err: 'invalide ID' });
+        const user = await User.findOneAndDelete({ _id: userId });
+        return res.send({ user });
+      } catch (err) {
+        console.log(err);
+        return res.status(500).send({ err: err.message });
+      }
+    });
+
+    app.put('/user/:userId', async (req, res) => {
+      try {
+        const { userId } = req.params;
+        if (!mongoose.isValidObjectId)
+          return res.status(400).send({ err: 'invalide ID' });
+        const { age } = req.body;
+        if (!age) return res.status(400).send({ err: 'age is required' });
+        if (typeof age !== 'number')
+          return res.status(400).send({ err: 'age must be a number' });
+
+        const user = await User.findByIdAndUpdate(
+          userId,
+          { $set: { age } },
+          { new: true }
+        );
+        return res.send({ user });
       } catch (err) {
         console.log(err);
         return res.status(500).send({ err: err.message });
