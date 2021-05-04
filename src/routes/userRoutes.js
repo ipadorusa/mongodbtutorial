@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const userRouter = Router();
 const { User } = require('../models/User');
+const mongoose = require('mongoose');
 
 userRouter.get('/', async (req, res) => {
   try {
@@ -51,15 +52,23 @@ userRouter.put('/:userId', async (req, res) => {
       return res.status(400).send({ err: 'age must be a number' });
     if (name && typeof name.first !== 'string' && typeof name.last !== 'string')
       return res.status(400).send({ err: 'first or last name are strings' });
-    let updateBody = {};
-    if (age) updateBody.age = age;
-    if (name) updateBody.name = name;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateBody },
-      { new: true }
-    );
+    // let updateBody = {};
+    // if (age) updateBody.age = age;
+    // if (name) updateBody.name = name;
+
+    // const user = await User.findByIdAndUpdate(
+    //   userId,
+    //   { $set: updateBody },
+    //   { new: true }
+    // );
+
+    let user = await User.findById(userId);
+    console.log(user);
+    if (age) user.age = age;
+    if (name) user.name = name;
+    await user.save();
+    console.log(user);
     return res.send({ user });
   } catch (err) {
     console.log(err);
